@@ -1,3 +1,7 @@
+import logging 
+
+logging.basicConfig(format='%(asctime)s [%(levelname)s] %(name)s: %(message)s')
+
 class TODLoop:
     """Main driving class for looping through coincident signals of different TODs"""
     def __init__(self):
@@ -9,11 +13,13 @@ class TODLoop:
         self._tod_id = None
         self._tod_name = None
         self._skip_list = []
+        self.logger = logging.getLogger(self.__class__.__name__)
+        self.logger.setLevel(logging.INFO)
 
     def add_routine(self, routine):
         """Add a routine to the event loop"""
         self._routines.append(routine)
-        print '[INFO] Added routine: %s' % routine.__class__.__name__
+        self.logger.info('Added routine: %s' % routine.__class__.__name__)
         routine.add_context(self)  # make event loop accessible in each routine
 
     def add_tod_list(self, tod_list_dir):
@@ -60,7 +66,7 @@ class TODLoop:
         self.initialize()
         for tod_id in range(start, end):
             if tod_id in self._skip_list:
-                print '[INFO] tod: %d in the skip_list, skipping ...' % tod_id
+                self.logger.info('TOD: %d in the skip_list, skipping ...' % tod_id)
                 continue  # skip if in skip list
             self._tod_id = tod_id
             self._tod_name = self._tod_list[tod_id]
@@ -114,6 +120,8 @@ class Routine:
     in various studies."""
     def __init__(self):
         self._context = None
+        self.logger = logging.getLogger(self.__class__.__name__)
+        self.logger.setLevel(logging.INFO)
 
     def initialize(self):
         """Script that runs when the pipeline is initializing. It's
@@ -133,6 +141,7 @@ class Routine:
         """Prevent the TOD to be processed by other routines (stopped
         the pipeline for the TOD currently running. It's useful for
         filtering TODs"""
+        self.logger.info("TOD vetod, skipping subsequent routines...")
         self.get_context().veto()
         
     def add_context(self, context):
@@ -161,6 +170,7 @@ class Routine:
         tod_name = self.get_context().get_name()
         array_name = tod_name.split(".")[-2]
         return array_name 
+
 
 class DataStore:
     """Cache class for event loop"""

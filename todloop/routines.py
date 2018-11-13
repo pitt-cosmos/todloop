@@ -3,7 +3,6 @@ from todloop.base import Routine
 import cPickle
 import pprint
 
-
 class OutputRoutine(Routine):
     """A base routine that has output functionality"""
     def __init__(self, output_dir):
@@ -12,18 +11,19 @@ class OutputRoutine(Routine):
 
     def initialize(self):
         if not os.path.exists(self._output_dir):
-            print '[INFO] Path %s does not exist, creating ...' % self._output_dir
+            self.logger.info('Path %s does not exist, creating ...' % self._output_dir)
             os.makedirs(self._output_dir)
 
     def save_data(self, data):
         tod_id = self.get_context().get_id()
         with open(self._output_dir+str(tod_id)+".pickle", "w") as f:
             cPickle.dump(data, f, cPickle.HIGHEST_PROTOCOL)
-            print '[INFO] Data saved: %s' % self._output_dir+str(tod_id)+".pickle"
+            self.logger.info('Data saved: %s' % self._output_dir+str(tod_id)+".pickle")
 
     def save_figure(self, fig):
         tod_id = self.get_context().get_id()
         fig.savefig(self._output_dir+str(tod_id)+".png")
+        self.logger.info('Figure saved: %s' % self._output_dir+str(tod_id)+".png")
 
     def finalize(self):
         # write metadata to the directory
@@ -31,6 +31,7 @@ class OutputRoutine(Routine):
         if metadata:  # if metadata exists
             with open(self._output_dir+".metadata", "w") as f:
                 cPickle.dump(metadata, f, cPickle.HIGHEST_PROTOCOL)
+                self.logger.info("Metadata is saved")
 
 
 class SaveData(OutputRoutine):
@@ -55,9 +56,8 @@ class Logger(Routine):
         
     def execute(self):
         data = self.get_store().get(self._input_key)
-        print '[INFO] Logger: %s = ' % self._input_key
+        self.logger.info("Logger: %s = ' % self._input_key")
         self._pp.pprint(data)
-
 
 
 class DataLoader(Routine):
@@ -68,6 +68,7 @@ class DataLoader(Routine):
         :param postfix:    string - file extension
         :param output_key: string - key used to store loaded data
         """
+        Routine.__init__(self)
         self._input_dir = input_dir
         self._postfix = postfix
         self._output_key = output_key
@@ -83,24 +84,24 @@ class DataLoader(Routine):
         if os.path.isfile(filepath):
             with open(filepath, "r") as f:
                 data = cPickle.load(f)
-                print '[INFO] Fetched: %s' % filepath
+                self.logger.info('Fetched: %s' % filepath)
                 if data:  # check if data is None
                     self.get_store().set(self._output_key, data)
                 else:  # data is None
-                    print '[WARNING] Data is None, skipping ...'
+                    self.logger.warn('Data is None, skipping ...')
                     self.veto()  # skipping
         else:
-            print '[WARNING] Not found: %s, skipping ...' % filepath
+            self.logger.warn('Not found: %s, skipping ...' % filepath)
             self.veto()
 
     def load_metadata(self):
         """Load metadata if there is one"""
         metadata_path = self._input_dir + ".metadata"
         if os.path.isfile(metadata_path):
-            print '[INFO] Metadata found!'
+            self.logger.info('Metadata found!')
             with open(self._input_dir + ".metadata", "r") as meta:
                 self._metadata = cPickle.load(meta)
-                print '[INFO] Metadata loaded!'
+                self.logger.info('Metadata loaded!')
 
     def get_metadata(self):
         return self._metadata
