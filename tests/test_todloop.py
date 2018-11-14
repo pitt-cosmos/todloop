@@ -7,7 +7,7 @@ import pytest
 
 from click.testing import CliRunner
 
-from todloop import todloop
+from todloop import base
 from todloop import cli
 
 
