@@ -16,22 +16,25 @@ class OutputRoutine(Routine):
 
     def save_data(self, data):
         tod_id = self.get_context().get_id()
-        with open(self._output_dir+str(tod_id)+".pickle", "w") as f:
+        filename = os.path.join(self._output_dir, '%d.pickle' % tod_id)
+        with open(filename, "w") as f:
             cPickle.dump(data, f, cPickle.HIGHEST_PROTOCOL)
-            self.logger.info('Data saved: %s' % self._output_dir+str(tod_id)+".pickle")
+            self.logger.info('Data saved: %s' % filename)
 
     def save_figure(self, fig):
         tod_id = self.get_context().get_id()
-        fig.savefig(self._output_dir+str(tod_id)+".png")
-        self.logger.info('Figure saved: %s' % self._output_dir+str(tod_id)+".png")
+        filename = os.path.join(self._output_dir, '$d.png' % tod_id)
+        fig.savefig(filename)
+        self.logger.info('Figure saved: %s' % filename)
 
     def finalize(self):
         # write metadata to the directory
         metadata = self.get_context().get_metadata()
         if metadata:  # if metadata exists
-            with open(self._output_dir+".metadata", "w") as f:
+            filename = os.path.join(self._output_dir, '.metadata')
+            with open(filename, "w") as f:
                 cPickle.dump(metadata, f, cPickle.HIGHEST_PROTOCOL)
-                self.logger.info("Metadata is saved")
+                self.logger.info("Metadata is saved at: %s", filename)
 
 
 class SaveData(OutputRoutine):
@@ -80,7 +83,7 @@ class DataLoader(Routine):
     def execute(self):
         """A function that fetch a batch of files in order"""
         i = self.get_id()
-        filepath = "%s%s.%s" % (self._input_dir, i, self._postfix)
+        filepath = os.path.join(self._input_dir, "%s.%s" % (i, self._postfix))
         if os.path.isfile(filepath):
             with open(filepath, "r") as f:
                 data = cPickle.load(f)
@@ -99,9 +102,10 @@ class DataLoader(Routine):
         metadata_path = self._input_dir + ".metadata"
         if os.path.isfile(metadata_path):
             self.logger.info('Metadata found!')
-            with open(self._input_dir + ".metadata", "r") as meta:
+            filename = os.path.join(self._input_key, '.metadata')
+            with open(filename, "r") as meta:
                 self._metadata = cPickle.load(meta)
-                self.logger.info('Metadata loaded!')
+                self.logger.info('Metadata loaded from: %s!' % filename)
 
     def get_metadata(self):
         return self._metadata
