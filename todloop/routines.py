@@ -1,6 +1,7 @@
 import os
 from todloop.base import Routine
 import cPickle
+import numpy as np
 import pprint
 
 class OutputRoutine(Routine):
@@ -86,9 +87,17 @@ class DataLoader(Routine):
         filepath = os.path.join(self._input_dir, "%s.%s" % (i, self._postfix))
         if os.path.isfile(filepath):
             with open(filepath, "r") as f:
-                data = cPickle.load(f)
+                if self._postfix == "pickle":
+                    data = cPickle.load(f)
+                elif self._postfix == "npy":
+                    data = np.load(f)
+                else:
+                    self.logger.error("Unrecognized mode!")
+                    self.veto()
+                    return
+
                 self.logger.info('Fetched: %s' % filepath)
-                if data:  # check if data is None
+                if len(data)>0:  # check if data is None
                     self.get_store().set(self._output_key, data)
                 else:  # data is None
                     self.logger.warn('Data is None, skipping ...')
