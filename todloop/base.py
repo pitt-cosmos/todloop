@@ -70,7 +70,7 @@ class TODLoop:
                 continue  # skip if in skip list
             self._tod_id = tod_id
             self._tod_name = self._tod_list[tod_id]
-            self.execute()
+            self.execute(self._store)
 
         self.finalize()
         
@@ -128,7 +128,7 @@ class Routine:
          a good place for scripts that need to run only once."""
         pass
     
-    def execute(self):
+    def execute(self, store):
         """Script that runs for each TOD"""
         pass
     

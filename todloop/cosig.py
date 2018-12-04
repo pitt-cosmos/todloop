@@ -31,10 +31,10 @@ class FindCosigs(Routine):
         if (not self._strict) and (not self._polarized):  # give a warning
             self.logger.warn('Using loose mode for unpolarized signals may not be accurate')
 
-    def execute(self):
+    def execute(self, store):
         # retrieve all cuts
         self._pr = PixelReader(season=self._season, array=self.get_context().get_array())
-        cuts_data = self.get_store().get(self._input_key)  # get saved cut data
+        cuts_data = store.get(self._input_key)  # get saved cut data
         cuts = cuts_data['cuts']
         nsamps = cuts_data['nsamps']
 
@@ -127,4 +127,4 @@ class FindCosigs(Routine):
                 cosig_filtered[pixel] = cuts
 
         # save cosig for further processing
-        self.get_store().set(self._output_key, cosig_filtered)  # save the coincident signals under the output_key
+        store.set(self._output_key, cosig_filtered)  # save the coincident signals under the output_key

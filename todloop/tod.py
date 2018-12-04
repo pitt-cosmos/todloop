@@ -20,7 +20,7 @@ class TODLoader(Routine):
     def initialize(self):
         self._fb = get_filebase()
 
-    def execute(self):
+    def execute(self, store):
         if self._abspath:  # if absolute path is given
             tod_filename = self.get_name()
         else:
@@ -29,7 +29,7 @@ class TODLoader(Routine):
         self.logger.info('Loading TOD: %s ...' % tod_filename)
         tod_data = moby2.scripting.get_tod({'filename': tod_filename, 'repair_pointing': True})
         self.logger.info('TOD loaded')
-        self.get_store().set(self._output_key, tod_data)  # save tod_data in memory for routines to process
+        store.set(self._output_key, tod_data)  # save tod_data in memory for routines to process
 
 
 class TODSelector(Routine):
@@ -55,11 +55,11 @@ class FixOpticalSign(Routine):
         self._input_key = input_key
         self._output_key = output_key
 
-    def execute(self):
-        tod_data = self.get_store().get(self._input_key)  # retrieve TOD
+    def execute(self, store):
+        tod_data = store.get(self._input_key)  # retrieve TOD
         optical_signs = tod_data.info.array_data['optical_sign']
         tod_data.data = tod_data.data*optical_signs[:, np.newaxis]
-        self.get_store().set(self._output_key, tod_data)
+        store.set(self._output_key, tod_data)
 
 
 class CalibrateTOD(Routine):
@@ -69,10 +69,10 @@ class CalibrateTOD(Routine):
         self._input_key = input_key
         self._output_key = output_key
 
-    def execute(self):
-        tod = self.get_store().get(self._input_key)
+    def execute(self, store):
+        tod = store.get(self._input_key)
         cal = moby2.scripting.get_calibration({'type': 'iv', 'source': 'data'}, tod=tod)
         cal_mask, cal_val = cal.get_property('cal', det_uid=tod.det_uid)
         tod.data *= cal_val[:,None]
-        self.get_store().set(self._output_key, tod)
+        store.set(self._output_key, tod)
 
