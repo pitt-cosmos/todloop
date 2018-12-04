@@ -1,7 +1,8 @@
-from todloop.base import Routine
-from todloop.utils.cuts import remove_overlap_tod, trim_edge_cuts, merge_cuts, common_cuts
-from todloop.utils.pixels import PixelReader
 import numpy as np
+
+from .base import Routine
+from .utils.cuts import remove_overlap_tod, trim_edge_cuts, merge_cuts, common_cuts
+from .utils.pixels import PixelReader
 
 
 class FindCosigs(Routine):

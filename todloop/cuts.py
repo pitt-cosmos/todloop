@@ -1,5 +1,6 @@
 import moby2
-from todloop.routines import OutputRoutine
+
+from .routines import OutputRoutine
 
 
 class CompileCuts(OutputRoutine):

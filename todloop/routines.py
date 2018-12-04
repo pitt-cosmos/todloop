@@ -1,8 +1,10 @@
 import os
-from todloop.base import Routine
-import cPickle
+import pickle
 import numpy as np
 import pprint
+
+from .base import Routine
+
 
 class OutputRoutine(Routine):
     """A base routine that has output functionality"""
@@ -19,7 +21,7 @@ class OutputRoutine(Routine):
         tod_id = self.get_context().get_id()
         filename = os.path.join(self._output_dir, '%d.pickle' % tod_id)
         with open(filename, "w") as f:
-            cPickle.dump(data, f, cPickle.HIGHEST_PROTOCOL)
+            pickle.dump(data, f, pickle.HIGHEST_PROTOCOL)
             self.logger.info('Data saved: %s' % filename)
 
     def save_figure(self, fig):
@@ -34,7 +36,7 @@ class OutputRoutine(Routine):
         if metadata:  # if metadata exists
             filename = os.path.join(self._output_dir, '.metadata')
             with open(filename, "w") as f:
-                cPickle.dump(metadata, f, cPickle.HIGHEST_PROTOCOL)
+                pickle.dump(metadata, f, pickle.HIGHEST_PROTOCOL)
                 self.logger.info("Metadata is saved at: %s", filename)
 
 
@@ -88,7 +90,7 @@ class DataLoader(Routine):
         if os.path.isfile(filepath):
             with open(filepath, "r") as f:
                 if self._postfix == "pickle":
-                    data = cPickle.load(f)
+                    data = pickle.load(f)
                 elif self._postfix == "npy":
                     data = np.load(f)
                 else:
@@ -113,7 +115,7 @@ class DataLoader(Routine):
             self.logger.info('Metadata found!')
             filename = os.path.join(self._input_key, '.metadata')
             with open(filename, "r") as meta:
-                self._metadata = cPickle.load(meta)
+                self._metadata = pickle.load(meta)
                 self.logger.info('Metadata loaded from: %s!' % filename)
 
     def get_metadata(self):

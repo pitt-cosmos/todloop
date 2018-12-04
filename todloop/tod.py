@@ -2,7 +2,7 @@ import moby2
 from moby2.scripting import get_filebase
 import numpy as np
 
-from todloop.base import Routine
+from .base import Routine
 
 
 class TODLoader(Routine):
