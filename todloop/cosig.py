@@ -1,7 +1,7 @@
 import numpy as np
 
 from .base import Routine
-from .utils.cuts import remove_overlap_tod, trim_edge_cuts, merge_cuts, common_cuts
+from .utils.cuts import remove_overlap_tod, trim_edge_cuts, merge_cuts, common_cuts, find_peaks
 from .utils.pixels import PixelReader
 
 
@@ -128,3 +128,36 @@ class FindCosigs(Routine):
 
         # save cosig for further processing
         store.set(self._output_key, cosig_filtered)  # save the coincident signals under the output_key
+        store.set("nsamps", nsamps)  # get nsamps from FindCosigs, not graceful
+
+
+class FindEvents(Routine):
+    def __init__(self, input_key="cosig", output_key="events"):
+        """A routine to find events that cause multiple cosigs
+        dependency: FindCosigs"""
+        Routine.__init__(self)
+        self._input_key = input_key
+        self._output_key = output_key
+        self._cosig = None
+        self._nsamps = None
+
+    def execute(self, store):
+        self._cosig = store.get(self._input_key)
+        self._nsamps = store.get("nsamps")  # get nsamps from FindCosigs, not graceful
+
+        # generate a histogram of cosigs
+        cosig_hist = np.zeros(self._nsamps)
+
+        for pixel in self._cosig:  # loop through key and value pair in cosig dict
+            cuts = self._cosig[pixel]
+            mask = cuts.get_mask(nsamps=self._nsamps)
+            cosig_hist += mask
+
+        cosig_peaks = find_peaks(cosig_hist)
+
+        # export the coincident signals and the peaks found in a combined dictionary
+        cosig_combined = {
+            'coincident_signals': self._cosig,
+            'peaks': cosig_peaks
+        }
+        store.set(self._output_key, cosig_combined)
