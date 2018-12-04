@@ -10,9 +10,9 @@ class CompileCuts(OutputRoutine):
         self._input_key = input_key
         self._glitchp = glitchp
 
-    def execute(self):
+    def execute(self, store):
         self.logger.info('Finding glitches...')
-        tod_data = self.get_context().get_store().get(self._input_key)  # retrieve tod_data
+        tod_data = store.get(self._input_key)  # retrieve tod_data
         glitch_cuts = moby2.tod.get_glitch_cuts(tod=tod_data, params=self._glitchp)
         mce_cuts = moby2.tod.get_mce_cuts(tod=tod_data)  # get mce cuts
         self.logger.info('Finding glitches complete')

@@ -46,8 +46,8 @@ class SaveData(OutputRoutine):
         OutputRoutine.__init__(self, output_dir)
         self._input_key = input_key
 
-    def execute(self):
-        data = self.get_context().get_store().get(self._input_key)
+    def execute(self, store):
+        data = store.get(self._input_key)
         self.save_data(data)
 
 
@@ -60,9 +60,9 @@ class Logger(Routine):
     def initialize(self):
         self._pp = pprint.PrettyPrinter(indent=1)
         
-    def execute(self):
-        data = self.get_store().get(self._input_key)
-        self.logger.info("Logger: %s = ' % self._input_key")
+    def execute(self, store):
+        data = store.get(self._input_key)
+        self.logger.info("Logger: %s = " % self._input_key)
         self._pp.pprint(data)
 
 
@@ -100,7 +100,7 @@ class DataLoader(Routine):
 
                 self.logger.info('Fetched: %s' % filepath)
                 if len(data)>0:  # check if data is None
-                    self.get_store().set(self._output_key, data)
+                    store.set(self._output_key, data)
                 else:  # data is None
                     self.logger.warn('Data is None, skipping ...')
                     self.veto()  # skipping
