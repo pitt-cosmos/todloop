@@ -35,12 +35,13 @@ class CleanTOD(Routine):
             tod_key: container of input tod in the store
             output_key: container of output tod in the store
         """
+        Routine.__init__(self)
         self._tod_key = tod_key 
         self._output_key = output_key
 
     def execute(self, store):
-        store.logger.info('Cleaning TOD ...')
-        tod = store.get(self._tod_container)
+        self.logger.info('Cleaning TOD ...')
+        tod = store.get(self._tod_key)
 
         # remove mce cuts
         mce_cuts = moby2.tod.get_mce_cuts(tod)
