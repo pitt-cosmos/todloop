@@ -45,7 +45,7 @@ setup(
     include_package_data=True,
     keywords='todloop',
     name='todloop',
-    packages=find_packages(include=['todloop']),
+    packages=find_packages(include=['todloop', 'todloop.utils']),
     setup_requires=setup_requirements,
     test_suite='tests',
     tests_require=test_requirements,

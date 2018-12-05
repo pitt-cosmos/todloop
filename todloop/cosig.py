@@ -1,6 +1,6 @@
 import numpy as np
 
-from .base import Routine, OutputRoutine
+from .routines import OutputRoutine
 from .utils.cuts import remove_overlap_tod, trim_edge_cuts, merge_cuts, common_cuts, find_peaks
 from .utils.pixels import PixelReader
 
@@ -29,10 +29,6 @@ class FindCosigs(OutputRoutine):
         self._polarized = polarized
         self._season = season
         self._save = save
-
-    def initialize(self):
-        if (not self._strict) and (not self._polarized):  # give a warning
-            self.logger.warn('Using loose mode for unpolarized signals may not be accurate')
 
     def execute(self, store):
         # retrieve all cuts

@@ -83,7 +83,7 @@ class DataLoader(Routine):
     def initialize(self):
         self.load_metadata()
 
-    def execute(self):
+    def execute(self, store):
         """A function that fetch a batch of files in order"""
         i = self.get_id()
         filepath = os.path.join(self._input_dir, "%s.%s" % (i, self._postfix))
