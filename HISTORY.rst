@@ -2,6 +2,12 @@
 History
 =======
 
+0.1.4 (2018-12-05)
+-----------------
+
+* Fix bugs in FindCosigs routine
+* Improve get_array function
+
 0.1.1 (2018-11-15)
 -----------------
 
