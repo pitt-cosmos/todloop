@@ -90,7 +90,11 @@ class TODLoop:
     def get_array(self):
         """Return name of the TOD"""
         # get metadata
-        return self._tod_name.split('.')[-1]
+        fields = self._tod_name.split('.')
+        if 'ar' in fields[-1].lower():
+            return fields[-1]
+        else:  # end with zip
+            return fields[-2]
 
     def add_metadata(self, key, obj):
         """Add a metadata, which will be saved together with the output
