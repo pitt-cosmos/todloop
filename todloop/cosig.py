@@ -1,14 +1,16 @@
 import numpy as np
 
-from .base import Routine
+from .base import Routine, OutputRoutine
 from .utils.cuts import remove_overlap_tod, trim_edge_cuts, merge_cuts, common_cuts, find_peaks
 from .utils.pixels import PixelReader
 
 
-class FindCosigs(Routine):
+class FindCosigs(OutputRoutine):
     """A routine that compiles the coincident signals from cuts"""
 
-    def __init__(self, season="2016", input_key="cuts", output_key="cosig", strict=True, polarized=False):
+    def __init__(self, season="2016", input_key="cuts",
+                 output_key="cosig", output_dir="outputs/cosigs",
+                 strict=True, polarized=False, save=True):
         """
         :param input_key: string
         :param output_key: string
@@ -19,13 +21,14 @@ class FindCosigs(Routine):
                         polarized signals. False means that we only look for
                         un-polarized signals.
         """
-        Routine.__init__(self)
+        OutputRoutine.__init__(self, output_dir)
         self._input_key = input_key
         self._output_key = output_key
         self._pr = None
         self._strict = strict
         self._polarized = polarized
         self._season = season
+        self._save = save
 
     def initialize(self):
         if (not self._strict) and (not self._polarized):  # give a warning
@@ -127,37 +130,9 @@ class FindCosigs(Routine):
                 cosig_filtered[pixel] = cuts
 
         # save cosig for further processing
-        store.set(self._output_key, cosig_filtered)  # save the coincident signals under the output_key
-        store.set("nsamps", nsamps)  # get nsamps from FindCosigs, not graceful
+        store.set(self._output_key, cosig_filtered) 
 
-
-class FindEvents(Routine):
-    def __init__(self, input_key="cosig", output_key="events"):
-        """A routine to find events that cause multiple cosigs
-        dependency: FindCosigs"""
-        Routine.__init__(self)
-        self._input_key = input_key
-        self._output_key = output_key
-        self._cosig = None
-        self._nsamps = None
-
-    def execute(self, store):
-        self._cosig = store.get(self._input_key)
-        self._nsamps = store.get("nsamps")  # get nsamps from FindCosigs, not graceful
-
-        # generate a histogram of cosigs
-        cosig_hist = np.zeros(self._nsamps)
-
-        for pixel in self._cosig:  # loop through key and value pair in cosig dict
-            cuts = self._cosig[pixel]
-            mask = cuts.get_mask(nsamps=self._nsamps)
-            cosig_hist += mask
-
-        cosig_peaks = find_peaks(cosig_hist)
-
-        # export the coincident signals and the peaks found in a combined dictionary
-        cosig_combined = {
-            'coincident_signals': self._cosig,
-            'peaks': cosig_peaks
-        }
-        store.set(self._output_key, cosig_combined)
+        # save
+        if self._save:
+            self.save_data(cosig_filtered)
+        
