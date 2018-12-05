@@ -49,7 +49,7 @@ class TODLoop:
             if self._veto:
                 break
             else:
-                routine.execute()
+                routine.execute(self._store)
         self._veto = False
     
     def finalize(self):
@@ -70,7 +70,7 @@ class TODLoop:
                 continue  # skip if in skip list
             self._tod_id = tod_id
             self._tod_name = self._tod_list[tod_id]
-            self.execute(self._store)
+            self.execute()
 
         self.finalize()
         
