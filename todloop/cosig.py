@@ -1,5 +1,6 @@
 import numpy as np
 
+from .base import Routine
 from .routines import OutputRoutine
 from .utils.cuts import merge_cuts, common_cuts, pixels_affected_in_event
 from .utils.events import find_peaks
@@ -138,7 +139,7 @@ class FindCosigs(OutputRoutine):
 
         # save
         if self._save:
-            self.save_data(cosig_filtered)
+            self.save_data(cosig_data)
 
 
 class FindEvents(Routine):
