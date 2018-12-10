@@ -1,7 +1,8 @@
 import numpy as np
 
 from .routines import OutputRoutine
-from .utils.cuts import remove_overlap_tod, trim_edge_cuts, merge_cuts, common_cuts, find_peaks
+from .utils.cuts import merge_cuts, common_cuts, pixels_affected_in_event
+from .utils.events import find_peaks
 from .utils.pixels import PixelReader
 
 
@@ -118,17 +119,96 @@ class FindCosigs(OutputRoutine):
 
                     cosig[str(p)] = common_cuts(cuts_f1, cuts_f2)  # store coincident signals by pixel id
 
-        # cosig may contain empty cut vectors because we didn't enforce it, filter them out now
+        # cosig may contain empty cut vectors because we didn't
+        # enforce it, filter them out now
         cosig_filtered = {}
         for pixel in cosig:
             cuts = cosig[pixel]
             if len(cuts) != 0:
                 cosig_filtered[pixel] = cuts
 
+        # form output object
+        cosig_data = {
+            'cosig': cosig_filtered,
+            'nsamps': nsamps
+        }
+
         # save cosig for further processing
-        store.set(self._output_key, cosig_filtered) 
+        store.set(self._output_key, cosig_data) 
 
         # save
         if self._save:
             self.save_data(cosig_filtered)
+
+
+class FindEvents(Routine):
+    def __init__(self, input_key="cosig", output_key="events"):
+        """A routine to find events that cause multiple cosigs across multiple
+        pixels
+
+        """
+        Routine.__init__(self)
+        self._input_key = input_key
+        self._output_key = output_key
+
+    def execute(self, store):
+        cosig_data = store.get(self._input_key)
+
+        nsamps = cosig_data['nsamps']
+        cosig = cosig_data['cosig']
+
+        # generate a histogram of cosigs
+        cosig_hist = np.zeros(nsamps)
+
+        # loop through pixels in cosig and update histogram
+        for pixel in cosig:  
+            cuts = cosig[pixel]
+            cosig_hist[cuts] += 1
+
+        peaks = find_peaks(cosig_hist)
+
+        # temporarily obsolete codes
+        # energy_calculator = self.get_store().get(self._energy_key)
+        # tod_data = self.get_store().get(self._tod_key)
+        # cuts = self.get_store().get(self._cosig_key)
         
+        # initialize a list to hold
+        events = []
+        
+        for peak in peaks:
+            all_pixels = pixels_affected_in_event(cosig, peak)
+            start = peak[0]
+            end = peak[1]
+            duration = peak[2]
+            number_of_pixels = peak[3]
+            ref_index = int((start + end)/2)
+
+            # temporarily obsolete codes
+            # energy_per_detector = []
+            # for pid in all_pixels:
+            #     pix_energy = energy_calculator(pid,start,end)
+            #     energy_per_detector.append(pix_energy)
+            # energy = np.sum(energy_per_detector)
+
+            # generate an id for each event for easier communication
+            id = "%d.%d" % (self.get_id(), start)
+
+            # store relevant information of the event into a dict
+            event = {
+                'id': id,
+                'start': start,
+                'end': end,
+                'duration': duration,
+                # 'ctime': tod_data.ctime[ref_index],
+                # 'alt': tod_data.alt[ref_index],
+                # 'az': tod_data.az[ref_index],
+                # 'energy': energy,
+                'number_of_pixels': float(number_of_pixels),
+                'pixels_affected': all_pixels
+            }
+
+            # save event to our list of events
+            events.append(event)
+
+        # output the events to our shared datastore
+        store.set(self._output_key, events)

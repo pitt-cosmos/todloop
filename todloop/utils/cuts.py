@@ -79,20 +79,3 @@ def pixels_affected_in_event(cs, event):
     return list(set(pixels_affected_list))
 
 
-def find_peaks(hist):
-    """Find peaks in the histogram corresponding to physical events
-    :param hist: histogram of coincident signals
-    :return: list: [start_time, end_time, duration, n_pixels_affected]
-    """
-    last = 0
-    peaks = []
-    for i in range(self._nsamps):
-        if hist[i] > 0 and last == 0:
-            peak_start = i
-        if hist[i] == 0 and last > 0:
-            peak_end = i
-            peak_amp = max(hist[peak_start:peak_end])
-            peak_duration = peak_end - peak_start
-            peaks.append([peak_start, peak_end, peak_duration, peak_amp])
-        last = hist[i]
-    return peaks
