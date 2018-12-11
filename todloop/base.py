@@ -62,6 +62,7 @@ class TODLoop:
 
         self.initialize()
         for tod_id in range(start, end):
+            self.logger.info('TOD ID: %d' % tod_id)
             if tod_id in self._skip_list:
                 self.logger.info('TOD: %d in the skip_list, skipping ...' % tod_id)
                 continue  # skip if in skip list
@@ -73,7 +74,6 @@ class TODLoop:
             self.execute(store)
 
             # clean memory
-            del store
             gc.collect()
 
         self.finalize()
