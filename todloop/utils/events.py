@@ -24,8 +24,8 @@ def timeseries(tod, pixel_id, s_time, e_time, pr, buffer=10,
 
     """
     # define start / end time with buffer
-    start_time = s_time - buffer
-    end_time = e_time + buffer
+    start_time = max(s_time - buffer, 0)
+    end_time = min(e_time + buffer, tod.data.shape[1])
 
     # get detectors corresponding to the pixel
     a1, a2 = pr.get_f1(pixel_id)

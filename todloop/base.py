@@ -1,4 +1,5 @@
 import logging 
+import gc
 
 logging.basicConfig(format='%(asctime)s [%(levelname)s] %(name)s: %(message)s')
 
@@ -7,7 +8,6 @@ class TODLoop:
     def __init__(self):
         self._routines = []
         self._veto = False
-        self._store = DataStore()  # initialize data store
         self._metadata = {}  # store metadata here
         self._tod_list = None
         self._tod_id = None
@@ -33,23 +33,20 @@ class TODLoop:
     def add_skip(self, skip_list):
         self._skip_list = skip_list
 
-    def get_store(self):
-        """Access the shared data storage"""
-        return self._store
-    
     def initialize(self):
         """Initialize all routines"""
         for routine in self._routines:
             routine.initialize()
     
-    def execute(self):
+    def execute(self, store):
         """Execute all routines"""
         for routine in self._routines:
             # check veto signal, if received, skip subsequent routines
             if self._veto:
                 break
             else:
-                routine.execute(self._store)
+                routine.execute(store)
+
         self._veto = False
     
     def finalize(self):
@@ -70,7 +67,14 @@ class TODLoop:
                 continue  # skip if in skip list
             self._tod_id = tod_id
             self._tod_name = self._tod_list[tod_id]
-            self.execute()
+
+            # initialize data store
+            store = DataStore()  
+            self.execute(store)
+
+            # clean memory
+            del store
+            gc.collect()
 
         self.finalize()
         
