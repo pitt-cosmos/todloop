@@ -211,5 +211,11 @@ class FindEvents(Routine):
             # save event to our list of events
             events.append(event)
 
+        # event data to save
+        events_data = {
+            'events': events,
+            'nsamps': nsamps
+        }
+                
         # output the events to our shared datastore
-        store.set(self._output_key, events)
+        store.set(self._output_key, events_data)
