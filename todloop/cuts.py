@@ -31,7 +31,7 @@ class CleanTOD(Routine):
         """This routine remove the MCE cuts and detrend and remove the mean
         for each TOD to prepare for cut compilation
 
-        Parameters:
+        Args:
             tod_key: container of input tod in the store
             output_key: container of output tod in the store
         """
