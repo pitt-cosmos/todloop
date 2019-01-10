@@ -164,6 +164,7 @@ class FindEvents(Routine):
         # loop through pixels in cosig and update histogram
         for pixel in cosig:  
             cuts = cosig[pixel]
+            cuts[:,1] = cuts[:,1] - 1
             cosig_hist[cuts] += 1
 
         peaks = find_peaks(cosig_hist)
