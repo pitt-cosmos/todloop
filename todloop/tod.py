@@ -1,33 +1,34 @@
 import moby2
-from moby2.scripting import get_filebase
 import numpy as np
 
 from .base import Routine
 
 
 class TODLoader(Routine):
-    def __init__(self, output_key="tod_data", abspath=False):
+    def __init__(self, output_key="tod_data", abspath=False, load_opts={}):
         """
         A routine that loads the TOD and save it to a key
         :param output_key: string - key used to save the tod_data
         :param abspath: bool - if the input name is absolute path or just name
+        :param load_opts: dict - dictionary with load options
         """
         Routine.__init__(self)
         self._output_key = output_key
         self._fb = None
         self._abspath = abspath
-
-    def initialize(self):
-        self._fb = get_filebase()
+        self._load_opts = load_opts
 
     def execute(self, store):
-        if self._abspath:  # if absolute path is given
-            tod_filename = self.get_name()
-        else:
-            tod_name = self.get_name()
-            tod_filename = self._fb.filename_from_name(tod_name, single=True)  # get file path
+        tod_filename = self.get_filename()
         self.logger.info('Loading TOD: %s ...' % tod_filename)
-        tod_data = moby2.scripting.get_tod({'filename': tod_filename, 'repair_pointing': True})
+
+        # define load options
+        load_opts = {
+            'filename': tod_filename,
+            'repair_pointing': True
+        }
+        load_opts.update(self._load_opts)
+        tod_data = moby2.scripting.get_tod(load_opts)
         self.logger.info('TOD loaded')
         store.set(self._output_key, tod_data)  # save tod_data in memory for routines to process
 

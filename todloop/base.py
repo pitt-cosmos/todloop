@@ -1,6 +1,6 @@
-import logging 
-import gc
+import gc, os
 
+import logging
 logging.basicConfig(format='%(asctime)s [%(levelname)s] %(name)s: %(message)s')
 
 class TODLoop:
@@ -12,7 +12,9 @@ class TODLoop:
         self._tod_list = None
         self._tod_id = None
         self._tod_name = None
+        self._fb = None
         self._skip_list = []
+        self._abspath = False
         self.logger = logging.getLogger(self.__class__.__name__)
         self.logger.setLevel(logging.INFO)
 
@@ -22,13 +24,17 @@ class TODLoop:
         self.logger.info('Added routine: %s' % routine.__class__.__name__)
         routine.add_context(self)  # make event loop accessible in each routine
 
-    def add_tod_list(self, tod_list_dir):
+    def add_tod_list(self, tod_list_dir, abspath=False):
         """Add a list of TODs as input
         @par:
-            tod_list_dir: string"""
+            tod_list_dir: string
+            abspath: bool - if tod name is given in absolute path or not"""
         with open(tod_list_dir, "r") as f:
             self._tod_list = [line.split('\n')[0] for line in f.readlines()]
             self._metadata['list'] = self._tod_list
+
+        # set abspath flag
+        self._abspath = abspath
 
     def add_skip(self, skip_list):
         self._skip_list = skip_list
@@ -89,7 +95,23 @@ class TODLoop:
     def get_name(self):
         """Return name of the TOD"""
         # get metadata
-        return self._tod_name
+        if self._abspath:
+            return os.path.basename(self._tod_name)
+        else:
+            return self._tod_name
+
+    def get_filename(self):
+        # check if we are looking at abspath or not
+        if self._abspath:
+            return self._tod_name
+        else:
+            # check if filebase is setup
+            if self._fb:
+                return self._fb.filename_from_name(self.get_name(), single=True)
+            else:
+                from moby2.scripting import get_filebase
+                self._fb = get_filebase()
+                return self._fb.filename_from_name(self.get_name(), single=True)
 
     def get_array(self):
         """Return name of the TOD"""
@@ -173,6 +195,9 @@ class Routine:
     def get_name(self):
         """A short cut to calling the get_name of parent pipeline"""
         return self.get_context().get_name()
+
+    def get_filename(self):
+        return self.get_context().get_filename()
     
     def get_array(self):
         tod_name = self.get_context().get_name()
