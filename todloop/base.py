@@ -43,7 +43,7 @@ class TODLoop:
         """Initialize all routines"""
         for routine in self._routines:
             routine.initialize()
-    
+
     def execute(self, store):
         """Execute all routines"""
         for routine in self._routines:
@@ -54,19 +54,22 @@ class TODLoop:
                 routine.execute(store)
 
         self._veto = False
-    
+
     def finalize(self):
         """Finalize all routines"""
         for routine in self._routines:
             routine.finalize()
-    
-    def run(self, start, end):
+
+    def run(self, start=0, end=None):
         """Main driver function to run the loop
         @param:
-            start: starting tod_id
-            end:   ending tod_id"""
+            start: starting tod_id (default 0)
+            end:   ending tod_id (default None)"""
 
         self.initialize()
+        # if end is not provided, run all
+        if not end:
+            end = len(self._tod_list)
         for tod_id in range(start, end):
             self.logger.info('TOD ID: %d' % tod_id)
             if tod_id in self._skip_list:
@@ -76,18 +79,18 @@ class TODLoop:
             self._tod_name = self._tod_list[tod_id]
 
             # initialize data store
-            store = DataStore()  
+            store = DataStore()
             self.execute(store)
 
             # clean memory
             gc.collect()
 
         self.finalize()
-        
+
     def veto(self):
         """Veto a TOD from subsequent routines"""
         self._veto = True
-    
+
     def get_id(self):
         """Return the index of current TOD in the list"""
         return self._tod_id
@@ -157,27 +160,27 @@ class Routine:
         """Script that runs when the pipeline is initializing. It's
          a good place for scripts that need to run only once."""
         pass
-    
+
     def execute(self, store):
         """Script that runs for each TOD"""
         pass
-    
+
     def finalize(self):
         """Method that runs after all TODs have been processed. It's
         a good place to close opened files or connection if any."""
         pass
-    
+
     def veto(self):
         """Prevent the TOD to be processed by other routines (stopped
         the pipeline for the TOD currently running. It's useful for
         filtering TODs"""
         self.logger.info("TOD vetod, skipping subsequent routines...")
         self.get_context().veto()
-        
+
     def add_context(self, context):
         """An internal function that's not to be called by users"""
         self._context = context
-        
+
     def get_context(self):
         """Return the pipeline (event loop) that this routine is part of.
         This is useful because the pipeline contains a shared data store
@@ -198,30 +201,30 @@ class Routine:
 
     def get_filename(self):
         return self.get_context().get_filename()
-    
+
     def get_array(self):
         tod_name = self.get_context().get_name()
         array_name = tod_name.split(".")[-2]
-        return array_name 
+        return array_name
 
 
 class DataStore:
     """Cache class for event loop"""
     def __init__(self):
         self._store = {}
-    
+
     def get(self, key):
         """Retrieve an object based on a key
         @par:
             key: str
-        @ret:   
+        @ret:
             Object of an arbitrary type associated with the key
             or None if no object is associated with the key"""
         if key in self._store:
             return self._store[key]
         else:
             return None
-    
+
     def set(self, key, obj):
         """Save an object with a key
         @par:
