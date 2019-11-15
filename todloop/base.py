@@ -239,7 +239,7 @@ class DataStore:
     def __init__(self):
         self._store = {}
 
-    def get(self, key):
+    def get(self, key, default=None):
         """Retrieve an object based on a key
         @par:
             key: str
@@ -249,7 +249,7 @@ class DataStore:
         if key in self._store:
             return self._store[key]
         else:
-            return None
+            return default
 
     def set(self, key, obj):
         """Save an object with a key
