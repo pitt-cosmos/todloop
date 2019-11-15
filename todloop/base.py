@@ -1,4 +1,4 @@
-import gc, os
+import gc, os, numpy as np
 
 import logging
 logging.basicConfig(format='%(asctime)s [%(levelname)s] %(name)s: %(message)s')
@@ -15,6 +15,8 @@ class TODLoop:
         self._fb = None
         self._skip_list = []
         self._abspath = False
+        self.comm = None
+        self.rank = 0
         self.logger = logging.getLogger(self.__class__.__name__)
         self.logger.setLevel(logging.INFO)
 
@@ -86,6 +88,24 @@ class TODLoop:
             gc.collect()
 
         self.finalize()
+
+    def run_parallel(self, n_workers=1):
+        n_total = len(self._tod_list)
+        self.logger.info("Distributing %d tods to %d workers" % \
+                         (n_total, n_workers))
+        # setup mpi
+        from mpi4py import MPI
+        comm = MPI.COMM_WORLD
+        size = comm.Get_size()
+        rank = comm.Get_rank()
+        self.comm = comm
+        self.rank = rank
+        self.logger.info("Node @ rank=%d\t size=%d" % (rank, size))
+        # distribute tasks
+        tasks = np.array_split(range(n_total), n_workers)
+        start = tasks[rank][0]
+        end = task[rank][1]+1
+        self.run(start=start, end=end)
 
     def veto(self):
         """Veto a TOD from subsequent routines"""
@@ -198,6 +218,12 @@ class Routine:
     def get_name(self):
         """A short cut to calling the get_name of parent pipeline"""
         return self.get_context().get_name()
+
+    def get_comm(self):
+        return self.get_context().comm
+
+    def get_rank(self):
+        return self.get_context().rank
 
     def get_filename(self):
         return self.get_context().get_filename()
