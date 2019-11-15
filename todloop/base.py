@@ -10,10 +10,11 @@ class TODLoop:
         self._veto = False
         self._metadata = {}  # store metadata here
         self._tod_list = None
+        self._skip_list = []
+        self._error_list = []
         self._tod_id = None
         self._tod_name = None
         self._fb = None
-        self._skip_list = []
         self._abspath = False
         self.comm = None
         self.rank = 0
@@ -79,10 +80,15 @@ class TODLoop:
                 continue  # skip if in skip list
             self._tod_id = tod_id
             self._tod_name = self._tod_list[tod_id]
+            self.logger.info("TOD ID %d: %s" % (tod_id, self._tod_name))
 
             # initialize data store
             store = DataStore()
-            self.execute(store)
+            try:
+                self.execute(store)
+            except Exception as e:
+                self.logger.error("%s occurred, skipping..." % type(e))
+                self._error_list.append(self._tod_name)
 
             # clean memory
             gc.collect()
