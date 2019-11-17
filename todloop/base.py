@@ -1,4 +1,5 @@
 import gc, os, numpy as np
+from todloop.utils import write_list
 
 import logging
 logging.basicConfig(format='%(asctime)s [%(levelname)s] %(name)s: %(message)s')
@@ -12,6 +13,7 @@ class TODLoop:
         self._tod_list = None
         self._skip_list = []
         self._error_list = []
+        self._done_list = []
         self._tod_id = None
         self._tod_name = None
         self._fb = None
@@ -86,6 +88,7 @@ class TODLoop:
             store = DataStore()
             try:
                 self.execute(store)
+                self._done_list.append(self._tod_name)
             except Exception as e:
                 self.logger.error("%s occurred, skipping..." % type(e))
                 self._error_list.append(self._tod_name)
@@ -172,6 +175,20 @@ class TODLoop:
         else:  # if a key is not provided, return the entire metadata
             return self._metadata
 
+    def _dump_stats(self):
+        """Dump useful data to disk for debugging purpose"""
+        if self.comm:
+            error_lists = self.comm.gather(self._error_list, root=0)
+            done_lists = self.comm.gather(self._done_list, root=0)
+        else:
+            error_lists = self._error_list
+            done_lists = self._done_list
+        if self.rank == 0:
+            error_list = [tod for l in error_lists for tod in l]
+            append2file(error_list, "error_list.txt")
+            done_list = [tod for l in done_lists for tod in l]
+            append2file(done_list, "done_list.txt")
+
 
 class Routine:
     """A routine is a reusable unit of a particular algorithm,
@@ -197,7 +214,7 @@ class Routine:
         pass
 
     def veto(self):
-        """Prevent the TOD to be processed by other routines (stopped
+        """Prevent the TOD to be processed by other routines. Stop
         the pipeline for the TOD currently running. It's useful for
         filtering TODs"""
         self.logger.info("TOD vetod, skipping subsequent routines...")
