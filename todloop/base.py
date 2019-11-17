@@ -1,5 +1,5 @@
 import gc, os, numpy as np
-from todloop.utils import write_list
+from todloop.utils import append2file
 
 import logging
 logging.basicConfig(format='%(asctime)s [%(levelname)s] %(name)s: %(message)s')
@@ -62,8 +62,11 @@ class TODLoop:
 
     def finalize(self):
         """Finalize all routines"""
+        # finalize all routines
         for routine in self._routines:
             routine.finalize()
+        # finalize the pipeline by dump useful stats
+        self._dump_stats()
 
     def run(self, start=0, end=None):
         """Main driver function to run the loop
@@ -76,13 +79,12 @@ class TODLoop:
         if not end:
             end = len(self._tod_list)
         for tod_id in range(start, end):
-            self.logger.info('TOD ID: %d' % tod_id)
             if tod_id in self._skip_list:
                 self.logger.info('TOD: %d in the skip_list, skipping ...' % tod_id)
                 continue  # skip if in skip list
             self._tod_id = tod_id
             self._tod_name = self._tod_list[tod_id]
-            self.logger.info("TOD ID %d: %s" % (tod_id, self._tod_name))
+            self.logger.info("TOD %d: %s" % (tod_id, self._tod_name))
 
             # initialize data store
             store = DataStore()
@@ -98,7 +100,7 @@ class TODLoop:
 
         self.finalize()
 
-    def run_parallel(self, n_workers=1):
+    def run_parallel(self, start=0, end=None, n_workers=1):
         n_total = len(self._tod_list)
         self.logger.info("Distributing %d tods to %d workers" % \
                          (n_total, n_workers))
@@ -111,9 +113,11 @@ class TODLoop:
         self.rank = rank
         self.logger.info("Node @ rank=%d\t size=%d" % (rank, size))
         # distribute tasks
-        tasks = np.array_split(range(n_total), n_workers)
+        if not end:
+            end = n_total
+        tasks = np.array_split(np.arange(start, end), n_workers)
         start = tasks[rank][0]
-        end = task[rank][1]+1
+        end = tasks[rank][-1]+1
         self.run(start=start, end=end)
 
     def veto(self):
