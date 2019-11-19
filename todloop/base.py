@@ -2,6 +2,7 @@ import gc, os, numpy as np
 from todloop.utils import append2file
 
 import logging
+import traceback
 logging.basicConfig(format='%(asctime)s [%(levelname)s] %(name)s: %(message)s')
 
 class TODLoop:
@@ -94,6 +95,7 @@ class TODLoop:
             except Exception as e:
                 self.logger.error("%s occurred, skipping..." % type(e))
                 self._error_list.append(self._tod_name)
+                traceback.print_exc()
 
             # clean memory
             gc.collect()
