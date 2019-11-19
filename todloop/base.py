@@ -21,6 +21,7 @@ class TODLoop:
         self._abspath = False
         self.comm = None
         self.rank = 0
+        self._output_dir = "."
         self.logger = logging.getLogger(self.__class__.__name__)
         self.logger.setLevel(logging.INFO)
 
@@ -44,6 +45,9 @@ class TODLoop:
 
     def add_skip(self, skip_list):
         self._skip_list = skip_list
+
+    def set_output_dir(self, output_dir):
+        self._output_dir = output_dir
 
     def initialize(self):
         """Initialize all routines"""
@@ -191,9 +195,9 @@ class TODLoop:
             done_lists = self._done_list
         if self.rank == 0:
             error_list = [tod for l in error_lists for tod in l]
-            append2file(error_list, "error_list.txt")
+            append2file(error_list, os.path.join(self._output_dir, "error_list.txt"))
             done_list = [tod for l in done_lists for tod in l]
-            append2file(done_list, "done_list.txt")
+            append2file(done_list, os.path.join(self._output_dir, "done_list.txt"))
 
 
 class Routine:
