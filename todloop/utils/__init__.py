@@ -5,7 +5,7 @@ def list2file(lst, filename):
     it exists"""
     with open(filename, "w") as f:
         for i in lst:
-            f.write(i)
+            f.write(i+'\n')
 
 def file2list(filename):
     """Load a file into a list"""
